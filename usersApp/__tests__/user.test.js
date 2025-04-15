@@ -45,6 +45,86 @@ describe("Requests for /api/users", ()=> {
     expect(res.body.status).toBeTruthy();
     expect(res.body.data.length).toBeGreaterThan(0);
   }, 50000);
+
+  it("POST Creates a new user", async() => {
+    const res = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        'username':'test5',
+        'password':'12345',
+        'name':'test5 name',
+        'surname':'test5 surname',
+        'email': 'test5@aueb.gr',
+        'address': {
+          'area': 'testArea',
+          'road':'testRoad'
+        }
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.status).toBeTruthy();
+  }, 50000)
+
+  it("POST Creates a user that exists", async() => {
+    const res = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        username: 'test5',
+        password: '12345',
+        name: 'new name',
+        surname: 'new surname',
+        email: 'new@aueb.gr',
+        address: {
+          area: 'xxx',
+          road: 'yyyy'
+        }
+      })
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.status).not.toBeTruthy();
+  })
+
+  it("Post Creates a user with same email", async() => {
+    const res = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        username:'test6',
+        password: '12345',
+        name: 'new name6',
+        surname: 'new surname6',
+        email: 'test5@aueb.gr',
+        address: {
+          area: 'xxx',
+          road: 'yyyy'
+        }
+      })
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.status).not.toBeTruthy();
+  });
+
+  it("POST Creates a user with empty name, surname, password", async() => {
+    const res = await request(app)
+      .post('/api/users')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        username: 'test6',
+        password: '',
+        name: '',
+        surname:'',
+        email:'test6@aueb.gr',
+        address: {
+          area: 'area1',
+          road: 'road1'
+        }
+      })
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.status).not.toBeTruthy();
+  })
 });
 
 describe("Requests for /api/user/:username", () => {
@@ -71,5 +151,37 @@ describe("Requests for /api/user/:username", () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.status).toBeTruthy();
     expect(res.body.data.username).toBe(result.username);
+  })
+
+  it("Update a user", async() => {
+    const result = await userService.findLastInsertedUser();
+
+    const res = await request(app)
+      .patch('/api/users/'+result.username)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        username: result.username,
+        name: "new updated name",
+        surname: "new updated surname",
+        email: "new@aueb.gr",
+        address: {
+          area: result.address.area,
+          road: result.address.road
+        }
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.status).toBeTruthy();
+  })
+
+  it("DELETE delete a user", async() => {
+    const result = await userService.findLastInsertedUser();
+
+    const res = await request(app)
+      .delete('/api/users/'+result.username)
+      .set('Authorization', `Bearer ${token}`)
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.status).toBeTruthy();
   })
 })
