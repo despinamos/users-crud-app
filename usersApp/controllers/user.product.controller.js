@@ -1,4 +1,3 @@
-const { ERR_CONN } = require('web3');
 const User = require('../models/user.model');
 
 exports.findAll = async(req, res) => {
